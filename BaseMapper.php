@@ -40,4 +40,20 @@ class BaseMapper
         }
         return $item;
     }
+
+    public function insert($model)
+    {
+        $insertvars = get_object_vars($model);
+        if (empty($insertvars[$this->pkName]))
+        {
+            unset($insertvars[$this->pkName]);
+        }
+        $sql = "INSERT INTO `{$this->dbName}` (`";
+        $sql .= implode("`, `", array_keys($insertvars));
+        $sql .= "`) VALUES (?";
+        $sql .= str_repeat(", ?", count($insertvars) - 1);
+        $sql .= ")";
+        $statement = $this->pdo->prepare($sql);
+        return $statement->execute(array_values($insertvars));
+    }
 }

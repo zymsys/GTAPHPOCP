@@ -30,8 +30,7 @@ class UserHandler extends BaseHandler
 
     function post()
     {
-        $statement = $this->pdo->prepare("INSERT INTO `user` (`id`, `first`, `last`) VALUES (?, ?, ?)");
-        $result = $statement->execute(array($this->postData['id'], $this->postData['first'], $this->postData['last']));
+        $result = $this->getMapper()->insert($this->modelFromRequest());
         $this->responseData->status = $result ? 'ok' : 'error';
     }
 
@@ -61,5 +60,10 @@ class UserHandler extends BaseHandler
             $this->mapper = new BaseMapper($this->pdo, 'UserModel', 'user', 'id');
         }
         return $this->mapper;
+    }
+
+    private function modelFromRequest()
+    {
+        return new UserModel($this->postData['id'], $this->postData['first'], $this->postData['last']);
     }
 }
