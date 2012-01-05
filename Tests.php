@@ -2,6 +2,7 @@
 
 require_once('UserHandler.php');
 require_once('BookHandler.php');
+require_once('XMLEncoder.php');
 
 class Tests extends PHPUnit_Framework_TestCase
 {
@@ -85,6 +86,17 @@ class Tests extends PHPUnit_Framework_TestCase
         $_SERVER['PATH_INFO'] = '/';
         $this->expectOutputString('[{"id":"1","user":"rrich","name":"Think and Grow Rich","author":"Napoleon Hill"},' .
             '{"id":"2","user":"dduck","name":"Deep Thoughts","author":"Jack Handey"}]');
+        $handler->processRequest();
+    }
+
+    function testXMLEncoding()
+    {
+        $handler = new UserHandler($this->pdo, array());
+        $handler->setEncoder(new XMLEncoder('users'));
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['PATH_INFO'] = '/';
+        $this->expectOutputString("<users><item><id>rrich</id><first>Richie</first><last>Rich</last></item>" .
+            "<item><id>dduck</id><first>Donald</first><last>Duck</last></item></users>");
         $handler->processRequest();
     }
 }
