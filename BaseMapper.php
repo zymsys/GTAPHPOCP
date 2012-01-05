@@ -56,4 +56,21 @@ class BaseMapper
         $statement = $this->pdo->prepare($sql);
         return $statement->execute(array_values($insertvars));
     }
+
+    public function update($oldId, $model)
+    {
+        $sets = array();
+        $setvalues = array();
+        foreach ($this->fields as $fieldname) {
+            $sets[] = "`$fieldname`=?";
+            $setvalues[] = $model->$fieldname;
+        }
+        $setvalues[] = $oldId;
+
+        $sql = "UPDATE `{$this->dbName}` SET " .
+            implode(', ', $sets) .
+            " WHERE `{$this->pkName}`=?";
+        $statement = $this->pdo->prepare($sql);
+        return $statement->execute($setvalues);
+    }
 }

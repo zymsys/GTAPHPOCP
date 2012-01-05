@@ -37,8 +37,7 @@ class UserHandler extends BaseHandler
     function put()
     {
         $updateUserId = substr($_SERVER['PATH_INFO'], 1);
-        $statement = $this->pdo->prepare("UPDATE `user` SET `first`=?, `last`=? WHERE `id`=?");
-        $result = $statement->execute(array($this->postData['first'], $this->postData['last'], $updateUserId));
+        $result = $this->getMapper()->update($updateUserId, $this->modelFromRequest());
         $this->responseData->status = $result ? 'ok' : 'error';
     }
 
