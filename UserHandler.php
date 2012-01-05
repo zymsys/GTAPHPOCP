@@ -15,19 +15,15 @@ class UserHandler extends BaseHandler
         else
         {
             $requestId = substr($path, 1);
-            $statement = $this->pdo->prepare("SELECT * FROM `user` WHERE `id` = ?");
-            $statement->execute(array($requestId));
-            $row = $statement->fetch();
-            if ($row === false)
+            $rows = $this->getMapper()->fetch("`id` = ?", array($requestId));
+            if (count($rows) == 0)
             {
                 $this->responseData->status = 'error';
                 $this->responseData->message = 'Unable to load user: '.$requestId;
             }
             else
             {
-                $this->responseData->id = $row['id'];
-                $this->responseData->first = $row['first'];
-                $this->responseData->last = $row['last'];
+                $this->responseData = $rows[0];
             }
         }
     }

@@ -14,10 +14,15 @@ class BaseMapper
         $this->fields = array_keys(get_class_vars($modelName));
     }
 
-    public function fetch()
+    public function fetch($filter = '', $values = array())
     {
-        $statement = $this->pdo->prepare("SELECT * FROM `{$this->dbName}`");
-        $statement->execute();
+        $sql = "SELECT * FROM `{$this->dbName}`";
+        if (!empty($filter))
+        {
+            $sql .= " WHERE $filter";
+        }
+        $statement = $this->pdo->prepare($sql);
+        $statement->execute($values);
         $result = array();
         foreach($statement->fetchAll() as $row)
         {
