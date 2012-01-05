@@ -1,5 +1,7 @@
 <?php
 
+require_once('BaseMapper.php');
+
 class BaseHandler
 {
     protected $pdo;

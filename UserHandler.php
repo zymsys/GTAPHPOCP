@@ -1,6 +1,7 @@
 <?php
 
 require_once('BaseHandler.php');
+require_once('UserModel.php');
 
 class UserHandler extends BaseHandler
 {
@@ -9,17 +10,7 @@ class UserHandler extends BaseHandler
         $path = $_SERVER['PATH_INFO'];
         if ($path == '/')
         {
-            $this->responseData = array();
-            $statement = $this->pdo->prepare("SELECT * FROM `user`");
-            $statement->execute();
-            foreach($statement->fetchAll() as $row)
-            {
-                $this->responseData[] = array(
-                    'id'=>$row['id'],
-                    'first'=>$row['first'],
-                    'last'=>$row['last']
-                );
-            }
+            $this->responseData = $this->getMapper()->fetch();
         }
         else
         {
@@ -62,5 +53,17 @@ class UserHandler extends BaseHandler
         $statement = $this->pdo->prepare("DELETE FROM `user` WHERE `id`=?");
         $result = $statement->execute(array($deleteId));
         $this->responseData->status = $result ? 'ok' : 'error';
+    }
+
+    /**
+     * @return BaseMapper
+     */
+    private function getMapper()
+    {
+        if (!isset($this->mapper))
+        {
+            $this->mapper = new BaseMapper($this->pdo, 'UserModel', 'user', 'id');
+        }
+        return $this->mapper;
     }
 }
