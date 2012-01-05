@@ -2,11 +2,18 @@
 
 require_once('BaseMapper.php');
 
-class BaseHandler
+abstract class BaseHandler
 {
     protected $pdo;
     protected $postData;
     protected $responseData;
+
+    /**
+     * @abstract
+     * @return BaseMapper
+     */
+    abstract protected function getMapper();
+    abstract protected function modelFromRequest();
 
     public function __construct($pdo, $postdata = null)
     {
@@ -36,4 +43,48 @@ class BaseHandler
         }
         echo json_encode($this->responseData);
     }
+
+    public function get()
+    {
+        $path = $_SERVER['PATH_INFO'];
+        if ($path == '/')
+        {
+            $this->responseData = $this->getMapper()->fetch();
+        }
+        else
+        {
+            $requestId = substr($path, 1);
+            $rows = $this->getMapper()->fetch("`id` = ?", array($requestId));
+            if (count($rows) == 0)
+            {
+                $this->responseData->status = 'error';
+                $this->responseData->message = 'Unable to load: '.$requestId;
+            }
+            else
+            {
+                $this->responseData = $rows[0];
+            }
+        }
+    }
+
+    function post()
+    {
+        $result = $this->getMapper()->insert($this->modelFromRequest());
+        $this->responseData->status = $result ? 'ok' : 'error';
+    }
+
+    function put()
+    {
+        $updateId = substr($_SERVER['PATH_INFO'], 1);
+        $result = $this->getMapper()->update($updateId, $this->modelFromRequest());
+        $this->responseData->status = $result ? 'ok' : 'error';
+    }
+
+    function delete()
+    {
+        $deleteId = substr($_SERVER['PATH_INFO'], 1);
+        $result = $this->getMapper()->delete($deleteId);
+        $this->responseData->status = $result ? 'ok' : 'error';
+    }
+
 }
