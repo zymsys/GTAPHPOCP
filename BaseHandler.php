@@ -4,6 +4,7 @@ class BaseHandler
 {
     protected $pdo;
     protected $postData;
+    protected $responseData;
 
     public function __construct($pdo, $postdata = null)
     {
@@ -25,10 +26,12 @@ class BaseHandler
 
     public function processRequest()
     {
+        $this->responseData = new stdClass();
         $method = strtolower($_SERVER['REQUEST_METHOD']);
         if (method_exists($this, $method))
         {
             call_user_func(array($this, $method));
         }
+        echo json_encode($this->responseData);
     }
 }
