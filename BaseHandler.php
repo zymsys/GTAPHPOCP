@@ -1,12 +1,14 @@
 <?php
 
 require_once('BaseMapper.php');
+require_once('JSONEncoder.php');
 
 abstract class BaseHandler
 {
     protected $pdo;
     protected $postData;
     protected $responseData;
+    protected $encoder;
 
     /**
      * @abstract
@@ -41,7 +43,7 @@ abstract class BaseHandler
         {
             call_user_func(array($this, $method));
         }
-        echo json_encode($this->responseData);
+        echo $this->getEncoder()->encode($this->responseData);
     }
 
     public function get()
@@ -85,6 +87,23 @@ abstract class BaseHandler
         $deleteId = substr($_SERVER['PATH_INFO'], 1);
         $result = $this->getMapper()->delete($deleteId);
         $this->responseData->status = $result ? 'ok' : 'error';
+    }
+
+    public function setEncoder($encoder)
+    {
+        $this->encoder = $encoder;
+    }
+
+    /**
+     * @return IEncoder
+     */
+    public function getEncoder()
+    {
+        if (!isset($this->encoder))
+        {
+            $this->encoder = new JSONEncoder();
+        }
+        return $this->encoder;
     }
 
 }
