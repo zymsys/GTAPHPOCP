@@ -1,6 +1,7 @@
 <?php
 
 require_once('UserHandler.php');
+require_once('BookHandler.php');
 
 class Tests extends PHPUnit_Framework_TestCase
 {
@@ -12,6 +13,10 @@ class Tests extends PHPUnit_Framework_TestCase
         $this->pdo->exec("CREATE TABLE `user` (`id` VARCHAR(20) PRIMARY KEY, `first` VARCHAR(20), `last` VARCHAR(30))");
         $this->pdo->exec("INSERT INTO `user` (`id`, `first`, `last`) VALUES ('rrich', 'Richie', 'Rich')");
         $this->pdo->exec("INSERT INTO `user` (`id`, `first`, `last`) VALUES ('dduck', 'Donald', 'Duck')");
+
+        $this->pdo->exec("CREATE TABLE `book` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `user` VARCHAR(20), `name` VARCHAR(50), `author` VARCHAR(50))");
+        $this->pdo->exec("INSERT INTO `book` (`user`, `name`, `author`) VALUES ('rrich', 'Think and Grow Rich', 'Napoleon Hill')");
+        $this->pdo->exec("INSERT INTO `book` (`user`, `name`, `author`) VALUES ('dduck', 'Deep Thoughts', 'Jack Handey')");
     }
 
     function testIndex()
@@ -71,5 +76,15 @@ class Tests extends PHPUnit_Framework_TestCase
         $handler->processRequest();
         $result = $this->pdo->query("SELECT `first` FROM `user` WHERE `id` = 'delme'")->fetchAll();
         $this->assertEquals(0, count($result));
+    }
+
+    function testGetBooks()
+    {
+        $handler = new BookHandler($this->pdo, array());
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['PATH_INFO'] = '/';
+        $this->expectOutputString('[{"id":"1","user":"rrich","name":"Think and Grow Rich","author":"Napoleon Hill"},' .
+            '{"id":"2","user":"dduck","name":"Deep Thoughts","author":"Jack Handey"}]');
+        $handler->processRequest();
     }
 }
