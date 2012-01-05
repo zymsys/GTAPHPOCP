@@ -1,0 +1,187 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Front-End for OCP Demo</title>
+    <script type="text/javascript" src="/js/jquery-1.7.1.js"></script>
+    <script type="text/javascript" src="/js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.tmpl.js"></script>
+    <script type="text/javascript" src="/js/knockout-2.0.0rc.debug.js"></script>
+    <script type="text/javascript" src="/js/knockout.server.js"></script>
+    <link rel="stylesheet" type="text/css" href="/css/jquery-ui.css">
+</head>
+<body>
+<div id="panelUser">
+    <table cellspacing="0">
+        <thead>
+            <tr>
+                <th>User ID</th><th>First Name</th><th>Last Name</th><th>Actions</th>
+            </tr>
+        </thead>
+        <tbody data-bind="template: {name:'userListTemplate', foreach: user.items}"></tbody>
+    </table>
+    <button data-bind="click: user.add">Add User</button>
+    <script type="text/html" id="userListTemplate">
+        <tr>
+            <td>${id}</td><td>${first}</td><td>${last}</td>
+            <td>
+                <button data-bind="click: edit">Edit</button>
+                <button data-bind="click: remove">Remove</button>
+            </td>
+        </tr>
+    </script>
+
+    <div id="userDialog" data-bind='template: {name: "userDialogTemplate", data: user.edit}' title="Authorized User Info"></div>
+    <script id="userDialogTemplate" type="text/html">
+        <table>
+            <tr>
+                <th>User ID:</th>
+                <td><input data-bind="value: id"></td>
+            </tr>
+            <tr>
+                <th>First Name:</th>
+                <td><input data-bind="value: first"></td>
+            </tr>
+            <tr>
+                <th>Last Name:</th>
+                <td><input data-bind="value: last"></td>
+            </tr>
+        </table>
+    </script>
+
+    <div id="userRemoveConfirmation" title="Are you Sure?"></div>
+    <script id="userRemoveConfirmationTemplate" type="text/html">
+        <p>Are you sure you want to remove user ${id}?</p>
+    </script>
+</div>
+<div id="panelBooks">
+    <table cellspacing="0">
+        <thead>
+            <tr>
+                <th>Book Name</th><th>Recommended By</th><th>Author</th>
+            </tr>
+        </thead>
+        <tbody data-bind="template: {name:'bookListTemplate', foreach: book.items}"></tbody>
+    </table>
+    <button data-bind="click: book.add">Add Book</button>
+    <script type="text/html" id="bookListTemplate">
+        <tr>
+            <td>${name}</td><td>${user}</td><td>${author}</td>
+            <td>
+                <button data-bind="click: edit">Edit</button>
+                <button data-bind="click: remove">Remove</button>
+            </td>
+        </tr>
+    </script>
+
+    <div id="bookDialog" data-bind='template: {name: "bookDialogTemplate", data: book.edit}' title="Book Info"></div>
+    <script id="bookDialogTemplate" type="text/html">
+        <table>
+            <tr>
+                <th>Name:</th>
+                <td><input data-bind="value: name"></td>
+            </tr>
+            <tr>
+                <th>Recommended By:</th>
+                <td><select data-bind="options: viewModel.user.items, optionsText: 'id', optionsValue: 'id', value: user"></select></td>
+            </tr>
+            <tr>
+                <th>Author:</th>
+                <td><input data-bind="value: author"></td>
+            </tr>
+        </table>
+    </script>
+
+    <div id="bookRemoveConfirmation" title="Are you Sure?"></div>
+    <script id="bookRemoveConfirmationTemplate" type="text/html">
+        <p>Are you sure you want to remove ${name}?</p>
+    </script>
+</div>
+</body>
+<script type="text/javascript">
+var user = {
+    getModel: function (viewModel) {
+        var UserModel = ko.server.ModelFactory({
+            viewModel: viewModel,
+            name: 'user',
+            fields: ['id', 'first', 'last'],
+            defaults: ['', '', '']
+        });
+        return UserModel;
+    },
+
+    getDataAdapter: function (viewModel) {
+        var userDataAdapter = ko.server.buildDataAdapter(viewModel, 'user', {
+            index: {
+                url: '/User.php/'
+            },
+            edit: {
+                url: '/User.php',
+                error: function(data) {
+                    if (data.status == 'error') {
+                        if (data.code == 23000) {
+                            userDataAdapter.error('That user ID is already taken.');
+                        } else {
+                            userDataAdapter.error('There was a problem adding that user.  Please try again later.');
+                        }
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            },
+            remove: {
+                url: '/User.php'
+            }
+        });
+        return userDataAdapter;
+    },
+
+    registerDependentObservables: function(viewModel) {
+    }
+}
+var book = {
+    getModel: function (viewModel) {
+        var BookModel = ko.server.ModelFactory({
+            viewModel: viewModel,
+            name: 'book',
+            fields: ['id', 'user', 'name', 'author'],
+            defaults: ['', '', '', '']
+        });
+        return BookModel;
+    },
+
+    getDataAdapter: function (viewModel) {
+        var userDataAdapter = ko.server.buildDataAdapter(viewModel, 'book', {
+            index: {
+                url: '/Book.php/'
+            },
+            edit: {
+                url: '/Book.php'
+            },
+            remove: {
+                url: '/Book.php'
+            }
+        });
+        return userDataAdapter;
+    },
+
+    registerDependentObservables: function(viewModel) {}
+}
+var viewModel = {};
+user.getModel(viewModel);
+book.getModel(viewModel);
+ko.server.dataAdapter(viewModel, 'user', user.getDataAdapter(viewModel));
+ko.server.dataAdapter(viewModel, 'book', book.getDataAdapter(viewModel));
+viewModel.book.edit.prototype.getAvailableUsers = function() {
+    return viewModel.user.items();
+};
+viewModel.book.edit.prototype.getName = function(x) {
+    return 'bobo';
+};
+
+ko.applyBindings(viewModel);
+user.registerDependentObservables(viewModel);
+book.registerDependentObservables(viewModel);
+</script>
+</html>
