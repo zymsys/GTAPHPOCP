@@ -73,4 +73,10 @@ class BaseMapper
         $statement = $this->pdo->prepare($sql);
         return $statement->execute($setvalues);
     }
+
+    public function delete($deleteId)
+    {
+        $statement = $this->pdo->prepare("DELETE FROM `{$this->dbName}` WHERE `id`=?");
+        return $statement->execute(array($deleteId));
+    }
 }

@@ -44,8 +44,7 @@ class UserHandler extends BaseHandler
     function delete()
     {
         $deleteId = substr($_SERVER['PATH_INFO'], 1);
-        $statement = $this->pdo->prepare("DELETE FROM `user` WHERE `id`=?");
-        $result = $statement->execute(array($deleteId));
+        $result = $this->getMapper()->delete($deleteId);
         $this->responseData->status = $result ? 'ok' : 'error';
     }
 
